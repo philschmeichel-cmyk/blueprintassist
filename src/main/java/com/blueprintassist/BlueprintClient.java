@@ -7,6 +7,7 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
@@ -27,6 +28,7 @@ final class BlueprintClient {
     private static final int MARKER_LIMIT = 80;
     private static final Map<String, Block> BLOCK_CACHE = new HashMap<>();
     private static int tickCounter;
+    private static int lastSwapTick = -100;
 
     static Block resolve(String id) {
         return BLOCK_CACHE.computeIfAbsent(id, key -> {
@@ -50,7 +52,7 @@ final class BlueprintClient {
         Schematic schematic = BlueprintState.schematic;
         BlockPos origin = BlueprintState.origin;
         if (schematic == null || origin == null) return;
-        if (mc.player == null || mc.level == null || mc.gui.screen() != null) return;
+        if (mc.player == null || mc.level == null || mc.gameMode == null || mc.gui.screen() != null) return;
         tickCounter++;
 
         if (!(mc.hitResult instanceof BlockHitResult hit) || hit.getType() != HitResult.Type.BLOCK) return;
@@ -86,7 +88,19 @@ final class BlueprintClient {
                 return;
             }
         }
-        mc.gui.hud.setOverlayMessage(Component.literal("Nicht in der Hotbar: ").append(expected.getName()), false);
+
+        // Nicht in der Hotbar: im restlichen Inventar (Slots 9-35) suchen und mit dem gewaehlten Hotbar-Slot tauschen.
+        for (int slot = 9; slot < 36; slot++) {
+            if (inventory.getItem(slot).is(item)) {
+                if (tickCounter - lastSwapTick < 4) return;
+                lastSwapTick = tickCounter;
+                // UNSICHERE STELLE 4: handleContainerInput / ContainerInput.SWAP (26.2). Button = Hotbar-Slot 0-8.
+                mc.gameMode.handleContainerInput(mc.player.inventoryMenu.containerId, slot,
+                        inventory.getSelectedSlot(), ContainerInput.SWAP, mc.player);
+                return;
+            }
+        }
+        mc.gui.hud.setOverlayMessage(Component.literal("Nicht im Inventar: ").append(expected.getName()), false);
     }
 
     private static void spawnMarkers(Minecraft mc, Schematic s, BlockPos origin, BlockPos center) {
