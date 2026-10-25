@@ -50,7 +50,7 @@ final class BlueprintClient {
         Schematic schematic = BlueprintState.schematic;
         BlockPos origin = BlueprintState.origin;
         if (schematic == null || origin == null) return;
-        if (mc.player == null || mc.level == null || mc.screen != null) return;
+        if (mc.player == null || mc.level == null || mc.gui.screen() != null) return;
         tickCounter++;
 
         if (!(mc.hitResult instanceof BlockHitResult hit) || hit.getType() != HitResult.Type.BLOCK) return;
@@ -71,7 +71,7 @@ final class BlueprintClient {
         BlockState current = mc.level.getBlockState(placePos);
         if (!current.isAir() && !current.canBeReplaced()) return; // dort steht schon etwas
 
-        mc.gui.setOverlayMessage(Component.literal("Blueprint: ").append(expected.getName()), false);
+        mc.gui.hud.setOverlayMessage(Component.literal("Blueprint: ").append(expected.getName()), false);
 
         if (!BlueprintState.autoSwap) return;
         Item item = expected.asItem();
@@ -86,7 +86,7 @@ final class BlueprintClient {
                 return;
             }
         }
-        mc.gui.setOverlayMessage(Component.literal("Nicht in der Hotbar: ").append(expected.getName()), false);
+        mc.gui.hud.setOverlayMessage(Component.literal("Nicht in der Hotbar: ").append(expected.getName()), false);
     }
 
     private static void spawnMarkers(Minecraft mc, Schematic s, BlockPos origin, BlockPos center) {

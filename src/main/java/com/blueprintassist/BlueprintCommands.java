@@ -55,7 +55,7 @@ final class BlueprintCommands {
 
     private static void msg(String text) {
         Minecraft mc = Minecraft.getInstance();
-        if (mc.player != null) mc.player.displayClientMessage(Component.literal(text), false);
+        if (mc.player != null) mc.player.sendSystemMessage(Component.literal(text));
     }
 
     private static Path schematicsDir() {
